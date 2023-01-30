@@ -1,0 +1,88 @@
+# lf Configuration file
+
+# Basic Configuration
+set shellopts '-eu'
+set scrolloff 10
+set icons
+set hidden
+set ignorecase true
+set ifs "\n"
+set dircounts
+set shell bash
+
+# Commands
+## Extract the current file
+cmd extract ${{
+  set -f
+  filename="${f##*/}"
+  case $f in
+    *.tar.bz|*.tar.bz2|*.tbz|*.tbz2) tar xjvf "$fx";;
+    *.tar.gz|*.tgz) tar xzvf "$fx";;
+    *.tar.xz|*.txz) tar xJvf "$fx";;
+    *.zip) unzip "$fx" -d "${filename%.*}";;
+    *.rar) mkdir "${filename%.*}"; rar e "$fx" "${filename%.*}";;
+    *.7z) 7z x "$fx";;
+  esac
+}}
+
+cmd compress ${{
+  filename="${f##*/}.rar"
+  rar a "$filename" "${fx##*/}" 
+}}
+
+# TODO: command to create folder, you always can use $mkdir
+# cmd makedir %{{
+# }}
+
+## Test some options
+cmd test !{{
+  byextension=("gsheet" "gdoc")
+  if [[ "${byextension[*]}" =~ "${f##*.}" ]]; then
+    printf "Google!!\n"
+    printf "${fx##*/}\n"
+  else
+  # printf "File:\n"
+  # printf "${f}\n"
+  # filename="${f##*/}"
+  # printf "Filename:\n"
+  # printf "${filename}\n"
+  # printf "Filename without extension:\n"
+  # printf "${filename%.*}\n"
+  # printf "${f##*.}\n"
+  # printf "FileType:\n"
+    printf "$(file --mime-type -Lb $f)\n"
+  fi
+}}
+
+## opener
+cmd open &{{
+  # Google docs files didn't work well with file command, so check extension first
+  byextension=("gsheet" "gdoc" "mc")
+  if [[ "${byextension[*]}" =~ "${f##*.}" ]]; then
+    wslview "${fx##*/}"
+  else
+    case $(file --mime-type -Lb "$f") in
+      text/*|application/json|application/csv) lf -remote "send $id \$$EDITOR \$fx";;
+      application/pdf) setsid -f evince "$fx" >/dev/null 2>&1;;
+      image/svg+xml) setsid -f inkscape.exe "${fx##*/}" >/dev/null 2>&1;;
+      image/png) wslview "${fx##*/}" ;;
+      application/vnd.openxmlformats-officedocument.spreadsheetml.sheet|application/vnd.openxmlformats-officedocument.wordprocessingml.document) wslview "${fx##*/}";;
+      *) for f in $fx; do $OPENER $f >/dev/null 2>&1; done;;
+    esac
+  fi
+}}
+
+    
+# Movement
+map gp cd /mnt/g/My\ Drive/PROJECTS/
+map gm cd /mnt/g/My\ Drive/MANUALES/
+map gc cd ~/.config/
+map gr cd ~/repos/
+
+# Mappings
+map E extract
+map R compress
+map d   # deletes cut mapping
+map dd delete
+map x cut
+map gt test
