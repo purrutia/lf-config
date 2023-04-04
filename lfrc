@@ -72,10 +72,15 @@ cmd open &{{
   fi
 }}
 
+# Copy file name to windows clipboard
+cmd cpfilename &{{
+  echo "${fx##*/}" | win32yank.exe -i
+}}
     
 # Movement
 map gp cd /mnt/g/My\ Drive/PROJECTS/
 map gm cd /mnt/g/My\ Drive/MANUALES/
+map gt cd /mnt/g/My\ Drive/TEMPLATES/
 map gc cd ~/.config/
 map gr cd ~/repos/
 
@@ -85,4 +90,5 @@ map R compress
 map d   # deletes cut mapping
 map dd delete
 map x cut
-map gt test
+# map gt test
+map gn cpfilename
